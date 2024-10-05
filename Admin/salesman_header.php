@@ -21,7 +21,7 @@
 </nav>
 <div class="alert alert-dark" role="alert">
 	<h3 align="center"> Canteen Management System </h3>
-    <h5 align="right"> -Kushal Kiran Timilsina <br>- Bibash Limbu </h5>
+    <h5 align="right"> -Kushal Kiran Timilsina </h5>
 </div>
 </body>
 </html>

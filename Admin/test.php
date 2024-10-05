@@ -1,187 +1,206 @@
-<?php include 'conn.php';
+<?php 
+require_once 'conn.php';
 include 'components.php'; 
-include 'header.php';?>
+if(isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $student_id = intval($_GET['id']);
+} else {
+    // If the ID is not valid, stop further processing and show an error
+    die("<p class='error'>Invalid Invoice Request. Please check the ID and try again.</p>");
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <title>Invoice - Company Name</title>
     <style>
-        body{
+        @media print {
+            .no-print, .no-print * {
+                display: none !important;
+            }
+            .container, .body-section {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                background-color: transparent;
+                box-shadow: none;
+                border: none;
+            }
+        }
+        body {
             background-color: #F6F6F6; 
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
         }
-        h1,h2,h3,h4,h5,h6{
-            margin: 0;
-            padding: 0;
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        p{
-            margin: 0;
-            padding: 0;
+        .brand-section {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 40px;
         }
-        .container{
-            width: 80%;
-            margin-right: auto;
-            margin-left: auto;
-        }
-        .brand-section{
-           background-color: #0d1033;
-           padding: 10px 40px;
-        }
-        .logo{
-            width: 50%;
-        }
-
-        .row{
+        .row {
             display: flex;
             flex-wrap: wrap;
+            padding: 20px;
+            align-items: center;
         }
-        .col-6{
+        .col-6 {
             width: 50%;
             flex: 0 0 auto;
         }
-        .text-white{
-            color: #fff;
-        }
-        .company-details{
-            float: right;
+        .company-details {
             text-align: right;
         }
-        .body-section{
+        .body-section {
             padding: 16px;
-            border: 1px solid gray;
+            border-top: 2px solid #eee;
         }
-        .heading{
-            font-size: 20px;
-            margin-bottom: 08px;
+        .heading {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
         }
-        .sub-heading{
-            color: #262626;
-            margin-bottom: 05px;
+        .sub-heading {
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 16px;
         }
-        table{
-            background-color: #fff;
+        table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
-        table thead tr{
-            border: 1px solid #111;
+        th, td {
+            border: 1px solid #ddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
             background-color: #f2f2f2;
         }
-        table td {
-            vertical-align: middle !important;
+        .print-button {
+            display: block;
+            width: max-content;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #4CAF50; /* Green */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             text-align: center;
         }
-        table th, table td {
-            padding-top: 08px;
-            padding-bottom: 08px;
-        }
-        .table-bordered{
-            box-shadow: 0px 0px 5px 0.5px gray;
-        }
-        .table-bordered td, .table-bordered th {
-            border: 1px solid #dee2e6;
-        }
-        .text-right{
-            text-align: end;
-        }
-        .w-20{
-            width: 20%;
-        }
-        .float-right{
-            float: right;
+        .error {
+            color: #ff0000;
+            text-align: center;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-<?php 
-    require('conn.php');
-    // $test_record= $_GET('id');
 
-    $select ="SELECT foodordered.o_id, food.f_id,food.f_name,foodordered.quantity,food.f_price,student.s_id,student.s_name, student.s_email,student.s_contact,student.s_location, foodordered.fo_ts,(foodordered.quantity*food.f_price) AS Total FROM foodordered INNER JOIN food ON foodordered.f_ids=f_id INNER JOIN student ON foodordered.s_ids=student.s_id";
+<div class=" no-print">
+    <?php include 'header.php'; // This will include the header but mark it to not print ?>
+</div>
 
-    $selectdata = $conn->query($select);
+<div class="container">
+    <?php 
+    if ($student_id) {
+        $stmt = $conn->prepare("SELECT foodordered.o_id, food.f_id, food.f_name, foodordered.quantity, food.f_price, student.s_id, student.s_name, student.s_email, student.s_contact, student.s_location, foodordered.fo_ts, (foodordered.quantity * food.f_price) AS Total FROM foodordered INNER JOIN food ON foodordered.f_ids = food.f_id INNER JOIN student ON foodordered.s_ids = student.s_id WHERE student.s_id = ?");
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-    if ($selectdata->num_rows > 0){
-            $row = mysqli_fetch_array($selectdata); 
-            $s_id = $row['s_id'];
-            $s_name = $row['s_name'];
-            $s_email = $row['s_email']; 
-            $s_contact = $row['s_contact'];
-            $s_location = $row['s_location'];
-            $o_id=$row['o_id'];
-            $f_id=$row['f_id'];
-            $f_name=$row['f_name'];
-            $quantity=$row['quantity'];
-            $f_price=$row['f_price'];
-            $fo_ts=$row['fo_ts'];
-            $total= $row['Total'];           
-    }
-?>
-  
-    <div class="container">
-        
-
-        <div class="body-section">
-            <div class="row">
-                <div class="col-6">
-                    <h2 class="heading">Invoice No.:<input type="text" name="email" value="<?php echo $s_id; ?>"> </h2>
-                    <p class="sub-heading"> Date:<?php echo date('d F, Y (l)'); ?> </p>
-                    <p class="sub-heading">Email Address:<input type="text" name="email" value="<?php echo $s_email; ?>">  </p>
-                </div>
-                <div class="col-6">
-                    <p class="sub-heading">Full Name:<input type="text" name="first" value="<?php echo $s_name; ?>"> </p>
-                    <p class="sub-heading">Address:<input type="text" name="address" value="<?php echo $s_location; ?>">  </p>
-                    <p class="sub-heading">Phone Number:<input type="text" name="contact" value="<?php echo $s_contact; ?>">  </p>
-                </div>
+        if ($result->num_rows > 0 && $row = $result->fetch_assoc()) {
+    ?>
+    <div class="brand-section">
+        <div class="row">
+            <div class="col-6">
+                <h1>Invoice Details</h1>
+            </div>
+            <div class="col-6 company-details">
+                <p>Canteen Management System</p>
+                <p>Balaju, Kathmandu</p>
             </div>
         </div>
-
-        <div class="body-section">
-            <h3 class="heading">Ordered Items</h3>
-            <br>
-            <table class="table-bordered">
-                
-                    <tr>
-                        <th>Foods</th>
-                        <th class="w-20">Price</th>
-                        <th class="w-20">Quantity</th>
-                        <th class="w-20">Grandtotal</th>
-                    </tr>
-                
-                
-                
-
-                    <tr>
-                        <td></td>
-                        <td>10</td>
-                        <td>1</td>
-                        <td>10</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3" class="text-right">Sub Total</td>
-                        <td> 10.XX</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3" class="text-right">Tax Total %1X</td>
-                        <td> 2</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3" class="text-right">Grand Total</td>
-                        <td> 12.XX</td>
-                    </tr>
-                </tbody>
-            </table>
-            <br>
-            <!-- <h3 class="heading">Payment Status: Paid</h3>
-            <h3 class="heading">Payment Mode: Cash on Delivery</h3> -->
+    </div>
+    <div class="body-section">
+        <button onclick="window.print();" class="print-button">Print this invoice</button>
+        <div class="row">
+            <div class="col-6">
+                <h2 class="heading">Invoice No.: <span><?php echo htmlspecialchars($row['o_id']); ?></span></h2>
+                <p class="sub-heading">Date: <?php echo date('d F, Y'); ?></p>
+                <p class="sub-heading">Email Address: <span><?php echo htmlspecialchars($row['s_email']); ?></span></p>
+            </div>
+            <div class="col-6 company-details">
+                <p class="sub-heading">Full Name: <span><?php echo htmlspecialchars($row['s_name']); ?></span></p>
+                <p class="sub-heading">Address: <span><?php echo htmlspecialchars($row['s_location']); ?></span></p>
+                <p class="sub-heading">Phone Number: <span><?php echo htmlspecialchars($row['s_contact']); ?></span></p>
+            </div>
         </div>
+    </div>
 
-             
-    </div>      
+    <div class="body-section">
+        <h3 class="heading">Ordered Items</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Foods</th>
+                    <th class="w-20">Price</th>
+                    <th class="w-20">Quantity</th>
+                    <th class="w-20">Grand Total</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
+            $subtotal = 0;
+            do {
+                $subtotal += $row['Total'];
+                ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($row['f_name']); ?></td>
+                    <td><?php echo htmlspecialchars($row['f_price']); ?></td>
+                    <td><?php echo htmlspecialchars($row['quantity']); ?></td>
+                    <td><?php echo htmlspecialchars($row['Total']); ?></td>
+                </tr>
+                <?php 
+            } while ($row = $result->fetch_assoc());
+            ?>
+                <tr>
+                    <td colspan="3" class="text-right">Sub Total</td>
+                    <td><?php echo number_format($subtotal, 2); ?></td>
+                </tr>
+                <tr>
+                    <td colspan="3" class="text-right">Tax Total %10</td>
+                    <td><?php echo number_format($subtotal * 0.10, 2); ?></td>
+                </tr>
+                <tr>
+                    <td colspan="3" class="text-right">Grand Total</td>
+                    <td><?php echo number_format($subtotal * 1.10, 2); ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <?php 
+        } else {
+            echo "<p>No invoice details available for the selected student.</p>";
+        }
+    }
+    ?>
+</div>
+
+<div class="no-print">
+    <?php include 'footer.php'; ?>
+</div>
 
 </body>
 </html>
-<?php include 'footer.php'?>
